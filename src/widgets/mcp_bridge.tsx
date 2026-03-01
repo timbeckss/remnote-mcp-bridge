@@ -213,6 +213,7 @@ function MCPBridgeWidget() {
             includeContent: payload.includeContent as string | undefined as
               | 'none'
               | 'markdown'
+              | 'structured'
               | undefined,
             childLimit: payload.childLimit as number | undefined,
             maxContentLength: payload.maxContentLength as number | undefined,

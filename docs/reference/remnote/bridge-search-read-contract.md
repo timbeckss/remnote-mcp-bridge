@@ -79,9 +79,9 @@ contract keeps iterations safe and predictable.
 - Rendering respects `depth`, `childLimit`, and `maxContentLength` parameters.
 - Truncation occurs at line boundaries; incomplete lines are never included.
 
-### `contentStructured` (optional, search only)
+### `contentStructured` (optional)
 
-- Structured child subtree for `remnote_search` results.
+- Structured child subtree for `remnote_search` and `remnote_read_note` results.
 - Present when `includeContent` is `"structured"`.
 - Value is an array of child nodes (not the root note itself), each with:
   - `remId`
@@ -150,15 +150,16 @@ The adapter-level renderer should preserve meaning over exact visual fidelity:
 ## Read behavior contract
 
 - Default `includeContent` for read is `"markdown"`.
+- Read `includeContent` modes: `"none" | "markdown" | "structured"`.
 - Default `depth` for read is 5.
 - Default `childLimit` for read is 100.
 - Default `maxContentLength` for read is 100000.
-- The `children` array and `NoteChild` type have been removed. Use `content` (markdown mode) instead.
+- The `children` array and `NoteChild` type have been removed. Use `content` (markdown mode) or `contentStructured`
+  (structured mode) instead.
 
 ## Breaking changes (from pre-0.6.0)
 
-- `includeContent` changed from `boolean` to string enum (`search`: `'none' | 'markdown' | 'structured'`; `read`:
-  `'none' | 'markdown'`).
+- `includeContent` changed from `boolean` to string enum (`search` and `read`: `'none' | 'markdown' | 'structured'`).
 - `children` array removed from `readNote` response.
 - `content` in `readNote` changed from echoing `title` to rendered markdown of child subtree.
 - Default `depth` for `readNote` changed from 3 to 5.

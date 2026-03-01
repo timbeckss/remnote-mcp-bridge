@@ -15,8 +15,8 @@ import { MCPSettings, DEFAULT_JOURNAL_PREFIX } from '../settings';
 // Build-time constant injected by webpack DefinePlugin
 declare const __PLUGIN_VERSION__: string;
 
-export type IncludeContentMode = 'none' | 'markdown';
-export type SearchIncludeContentMode = IncludeContentMode | 'structured';
+export type IncludeContentMode = 'none' | 'markdown' | 'structured';
+export type SearchIncludeContentMode = IncludeContentMode;
 
 export interface CreateNoteParams {
   title: string;
@@ -168,7 +168,11 @@ const SEARCH_INCLUDE_CONTENT_MODES: readonly SearchIncludeContentMode[] = [
   'markdown',
   'structured',
 ];
-const READ_INCLUDE_CONTENT_MODES: readonly IncludeContentMode[] = ['none', 'markdown'];
+const READ_INCLUDE_CONTENT_MODES: readonly IncludeContentMode[] = [
+  'none',
+  'markdown',
+  'structured',
+];
 
 export class RemAdapter {
   private settings: MCPSettings;
@@ -1055,6 +1059,7 @@ export class RemAdapter {
     remType: RemClassification;
     cardDirection?: CardDirection;
     content?: string;
+    contentStructured?: StructuredContentNode[];
     contentProperties?: ContentProperties;
   }> {
     const depth = params.depth ?? DEFAULT_DEPTH;
@@ -1081,6 +1086,7 @@ export class RemAdapter {
     const headline = this.formatHeadline(title, detail, remType);
 
     let content: string | undefined;
+    let contentStructured: StructuredContentNode[] | undefined;
     let contentProperties: ContentProperties | undefined;
 
     if (includeContent === 'markdown') {
@@ -1093,6 +1099,11 @@ export class RemAdapter {
       // Always include content for markdown mode (even if empty string)
       content = renderResult.content;
       contentProperties = await this.buildContentProperties(rem, renderResult, depth);
+    } else if (includeContent === 'structured') {
+      const structuredChildren = await this.renderContentStructured(rem, depth, childLimit);
+      if (structuredChildren.length > 0) {
+        contentStructured = structuredChildren;
+      }
     }
 
     return {
@@ -1104,6 +1115,7 @@ export class RemAdapter {
       remType,
       ...(cardDirection ? { cardDirection } : {}),
       ...(content !== undefined ? { content } : {}),
+      ...(contentStructured ? { contentStructured } : {}),
       ...(contentProperties ? { contentProperties } : {}),
     };
   }

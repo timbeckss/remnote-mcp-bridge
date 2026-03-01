@@ -773,11 +773,44 @@ describe('RemAdapter', () => {
       expect(result.contentProperties).toBeUndefined();
     });
 
+    it('should include structured child content when includeContent is structured', async () => {
+      const parent = plugin.addTestRem('read_struct_parent', 'Parent');
+      const child = new MockRem('read_struct_child', 'Child');
+      const grandchild = new MockRem('read_struct_grandchild', 'Grandchild');
+      await child.setParent(parent);
+      await grandchild.setParent(child);
+
+      const result = await adapter.readNote({
+        remId: 'read_struct_parent',
+        includeContent: 'structured',
+        depth: 2,
+      });
+
+      expect(result.content).toBeUndefined();
+      expect(result.contentProperties).toBeUndefined();
+      expect(result.contentStructured).toEqual([
+        {
+          remId: 'read_struct_child',
+          title: 'Child',
+          headline: 'Child',
+          remType: 'text',
+          children: [
+            {
+              remId: 'read_struct_grandchild',
+              title: 'Grandchild',
+              headline: 'Grandchild',
+              remType: 'text',
+            },
+          ],
+        },
+      ]);
+    });
+
     it('should reject unsupported read_note includeContent mode', async () => {
       plugin.addTestRem('bad_mode_note', 'Note');
 
       await expect(
-        adapter.readNote({ remId: 'bad_mode_note', includeContent: 'structured' as 'none' })
+        adapter.readNote({ remId: 'bad_mode_note', includeContent: 'invalid-mode' as never })
       ).rejects.toThrow('Invalid includeContent for read_note');
     });
 

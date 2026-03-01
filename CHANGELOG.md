@@ -7,6 +7,19 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- `remnote_read_note` now accepts `includeContent: "structured"` and returns `contentStructured` child trees (with
+  rem IDs/headlines) for ID-first hierarchy navigation.
+- Bridge widget request typing now allows `read_note` `includeContent` mode `"structured"` in addition to
+  `"none"`/`"markdown"`.
+- Updated search/read contract docs to reflect structured content support parity for `read_note`.
+
+### Fixed
+
+- Fixed `read_note` include-content validation to stop rejecting `"structured"` mode.
+- Added unit coverage for structured `read_note` output and unsupported-mode validation.
+
 ## [0.6.2] - 2026-02-27
 
 ### Fixed
