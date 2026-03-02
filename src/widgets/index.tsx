@@ -1,7 +1,7 @@
 /**
  * RemNote Automation Bridge Plugin
  *
- * Entry point for the RemNote plugin that connects to the MCP server.
+ * Entry point for the RemNote plugin that connects to automation bridge consumers.
  * This file only registers the widget - the actual widget is in mcp_bridge.tsx
  */
 
@@ -9,12 +9,16 @@ import { declareIndexPlugin, type ReactRNPlugin, WidgetLocation } from '@remnote
 import '../style.css';
 import { withLogPrefix } from '../logging';
 import {
+  SETTING_ACCEPT_WRITE_OPERATIONS,
+  SETTING_ACCEPT_REPLACE_OPERATION,
   SETTING_AUTO_TAG_ENABLED,
   SETTING_AUTO_TAG,
   SETTING_JOURNAL_PREFIX,
   SETTING_JOURNAL_TIMESTAMP,
   SETTING_WS_URL,
   SETTING_DEFAULT_PARENT,
+  DEFAULT_ACCEPT_WRITE_OPERATIONS,
+  DEFAULT_ACCEPT_REPLACE_OPERATION,
   DEFAULT_AUTO_TAG,
   DEFAULT_JOURNAL_PREFIX,
   DEFAULT_WS_URL,
@@ -25,23 +29,37 @@ async function onActivate(plugin: ReactRNPlugin) {
 
   // Register settings
   await plugin.settings.registerBooleanSetting({
+    id: SETTING_ACCEPT_WRITE_OPERATIONS,
+    title: 'Accept write operations',
+    description: 'Allow create, journal, and update operations from bridge consumers',
+    defaultValue: DEFAULT_ACCEPT_WRITE_OPERATIONS,
+  });
+
+  await plugin.settings.registerBooleanSetting({
+    id: SETTING_ACCEPT_REPLACE_OPERATION,
+    title: 'Accept replace operation',
+    description: 'Allow update replace operations that overwrite direct child bullets',
+    defaultValue: DEFAULT_ACCEPT_REPLACE_OPERATION,
+  });
+
+  await plugin.settings.registerBooleanSetting({
     id: SETTING_AUTO_TAG_ENABLED,
-    title: 'Auto-tag MCP notes',
-    description: 'Automatically add a tag to all notes created via MCP',
+    title: 'Auto-tag created notes',
+    description: 'Automatically add a tag to notes created via the automation bridge',
     defaultValue: true,
   });
 
   await plugin.settings.registerStringSetting({
     id: SETTING_AUTO_TAG,
     title: 'Auto-tag name',
-    description: 'Tag name to add to MCP-created notes (e.g., "MCP", "Claude")',
+    description: 'Tag name to add to bridge-created notes (leave empty to disable default tag)',
     defaultValue: DEFAULT_AUTO_TAG,
   });
 
   await plugin.settings.registerStringSetting({
     id: SETTING_JOURNAL_PREFIX,
     title: 'Journal entry prefix',
-    description: 'Optional prefix for journal entries (e.g., "[MCP]")',
+    description: 'Optional prefix for journal entries',
     defaultValue: DEFAULT_JOURNAL_PREFIX,
   });
 
@@ -55,7 +73,7 @@ async function onActivate(plugin: ReactRNPlugin) {
   await plugin.settings.registerStringSetting({
     id: SETTING_WS_URL,
     title: 'WebSocket server URL',
-    description: 'URL of the MCP WebSocket server',
+    description: 'URL of the automation bridge WebSocket server',
     defaultValue: DEFAULT_WS_URL,
   });
 
@@ -68,7 +86,7 @@ async function onActivate(plugin: ReactRNPlugin) {
 
   console.log(withLogPrefix('Settings registered'));
 
-  // Register MCP widget in popup
+  // Register automation bridge widget in popup
   // NOT needed anymore, but kept here for reference, in case the sidebar implementation doesn't work
   // and we need to revert to the popup implementation
   // await plugin.app.registerWidget('mcp_bridge', WidgetLocation.Popup, {
@@ -78,7 +96,7 @@ async function onActivate(plugin: ReactRNPlugin) {
   //   },
   // });
 
-  // Register MCP widget in right sidebar
+  // Register automation bridge widget in right sidebar
   await plugin.app.registerWidget('mcp_bridge', WidgetLocation.RightSidebar, {
     widgetTabIcon: `${plugin.rootURL}mcp-icon.svg`,
   });
@@ -87,9 +105,9 @@ async function onActivate(plugin: ReactRNPlugin) {
   // // NOT needed anymore, but kept here for reference, in case we need to revert
   // await plugin.app.registerCommand({
   //   id: 'open-mcp-bridge-popup',
-  //   name: 'Open MCP Bridge Control Panel',
+  //   name: 'Open Automation Bridge Control Panel',
   //   action: async () => {
-  //     await plugin.app.toast('Opening MCP Bridge Control Panel...');
+  //     await plugin.app.toast('Opening Automation Bridge Control Panel...');
   //     await plugin.widget.openPopup('mcp_bridge');
   //   },
   // });

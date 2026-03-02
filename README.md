@@ -48,10 +48,10 @@ to interact with external tools and data sources. With this plugin, your AI assi
 
 ### Plugin Features
 
-- **Sidebar Control Panel** - Monitor MCP connection status, statistics, and action history
-- **Auto-tagging** - Automatically tag notes created via MCP (configurable)
+- **Sidebar Control Panel** - Monitor Automation Bridge connection status, statistics, and action history
+- **Auto-tagging** - Automatically tag notes created via Automation Bridge actions (configurable)
 - **Session Statistics** - Track created/updated/journal entries/searches
-- **Action History** - View last 10 MCP actions with timestamps
+- **Action History** - View last 10 bridge actions with timestamps
 - **Configurable Settings** - Customize behavior through RemNote settings
 - **Real-time Status** - Live connection status indicator in sidebar panel
 
@@ -86,7 +86,7 @@ Choose the install path that fits your use case:
 
 After plugin installation (either path), open the control panel in RemNote:
 
-- Look for the **MCP** icon in RemNote's right sidebar toolbar
+- Look for the **Automation Bridge** icon in RemNote's right sidebar toolbar
 - Click the icon to open the Automation Bridge panel
 
 Related setup/testing guide:
@@ -128,15 +128,17 @@ documentation](https://github.com/robert7/remnote-mcp-server#multi-agent-support
 
 ## Configuration
 
-Access plugin settings in RemNote via **Settings > Plugins > Automation Bridge (MCP, OpenClaw...)**:
+Access plugin settings in RemNote via **Settings > Plugins > Automation Bridge (OpenClaw, CLI, MCP...)**:
 
 | Setting | Description | Default |
 |---------|-------------|---------|
-| Auto-tag MCP notes | Add a tag to all AI-created notes | `true` |
-| Auto-tag name | Tag name for AI-created notes | `MCP` |
+| Accept write operations | Allow write actions (`create_note`, `update_note`, `append_journal`) | `true` |
+| Accept replace operation | Allow destructive `update_note` replace operations | `false` |
+| Auto-tag created notes | Add a tag to notes created via bridge actions | `true` |
+| Auto-tag name | Tag name for auto-tagged created notes | `` |
 | Journal entry prefix | Optional prefix for journal entries | `` |
 | Add timestamp to journal | Include time in journal entries | `true` |
-| WebSocket server URL | MCP server connection URL | `ws://127.0.0.1:3002` |
+| WebSocket server URL | Automation bridge server connection URL | `ws://127.0.0.1:3002` |
 | Default parent Rem ID | Parent for new notes (empty = root) | `` |
 
 ## MCP Tools Available
@@ -158,17 +160,17 @@ Once connected, your AI assistant can use these tools:
 
 The bridge control panel is accessible via the right sidebar:
 
-1. Locate the **MCP icon** in RemNote's right sidebar toolbar
+1. Locate the **Automation Bridge icon** in RemNote's right sidebar toolbar
 2. Click the icon to open the control panel in the sidebar
 3. The panel displays:
    - **Connection Status** - Current WebSocket connection state
    - **Session Statistics** - Counts of created notes, updates, journal entries, and searches
-   - **Action History** - Last 10 MCP actions with timestamps
+   - **Action History** - Last 10 bridge actions with timestamps
    - **Recent Logs** - Real-time activity log
 4. The panel remains visible while you navigate RemNote (non-blocking)
 5. Click the icon again to close the panel
 
-The sidebar panel provides persistent monitoring of MCP connection and activity while you work in RemNote.
+The sidebar panel provides persistent monitoring of bridge connection and activity while you work in RemNote.
 
 ### Example AI Interactions
 

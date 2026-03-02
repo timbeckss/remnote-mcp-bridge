@@ -85,7 +85,7 @@ In the dialog:
 
 On the Plugins Build list, confirm:
 
-- Plugin entry is visible (`Automation Bridge (MCP, OpenClaw...)`)
+- Plugin entry is visible (`Automation Bridge (OpenClaw, CLI, MCP...)`)
 - URL is `http://localhost:8080/`
 - Status indicator is green / enabled
 
@@ -97,7 +97,7 @@ Use RemNote's right sidebar:
 
 - Open the sidebar plugins panel
 - Keep the sidebar pinned/open while testing
-- Open **Automation Bridge (MCP, OpenClaw...)**
+- Open **Automation Bridge (OpenClaw, CLI, MCP...)**
 
 ![Open plugin sidebar panel](./images/run-plugin-locally-07-open-plugin-sidebar-panel.jpg)
 

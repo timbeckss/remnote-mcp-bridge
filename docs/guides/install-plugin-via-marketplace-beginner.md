@@ -25,7 +25,7 @@ In RemNote:
 2. Open **Plugins**
 3. Open the **Browse** tab
 4. Search for `mcp`
-5. Find **Automation Bridge (MCP, OpenClaw...)**
+5. Find **Automation Bridge (OpenClaw, CLI, MCP...)**
 6. Click **Install**
 
 ![Browse plugins and install Automation Bridge](./images/install-plugin-marketplace-01-open-plugins-browse-and-search.jpg)
@@ -51,9 +51,9 @@ After installation, confirm:
 Use the right sidebar in RemNote:
 
 1. Open the right sidebar if it is collapsed
-2. Click the **MCP** icon/button
+2. Click the **Automation Bridge** icon/button
 
-![Open right sidebar and MCP panel](./images/install-plugin-marketplace-04-open-right-sidebar-and-mcp-panel.jpg)
+![Open right sidebar and Automation Bridge panel](./images/install-plugin-marketplace-04-open-right-sidebar-and-mcp-panel.jpg)
 
 ## 5. Install and run the required companion component
 

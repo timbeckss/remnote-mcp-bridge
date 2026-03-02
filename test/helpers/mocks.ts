@@ -195,6 +195,14 @@ export class MockRem implements Partial<PluginRem> {
     this.tags = this.tags.filter((id) => id !== tagId);
   }
 
+  async remove(): Promise<void> {
+    if (this.parent) {
+      this.parent.children = this.parent.children.filter((child) => child !== this);
+    }
+    this.parent = null;
+    this.children = [];
+  }
+
   getTags(): string[] {
     return this.tags;
   }

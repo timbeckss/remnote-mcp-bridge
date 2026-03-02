@@ -7,6 +7,28 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Added
+
+- Added bridge write policy settings:
+  - `Accept write operations` (default `true`)
+  - `Accept replace operation` (default `false`)
+- Added `update_note` `replaceContent` support for direct-child replacement.
+- Added explicit replace semantics for empty-string payloads: `replaceContent: ""` clears all direct children.
+
+### Changed
+
+- `update_note` now rejects mixed append+replace payloads in one request.
+- `update_note` is fully blocked when write operations are disabled by bridge settings.
+- `get_status` now reports `acceptWriteOperations` and `acceptReplaceOperation` policy flags.
+- Default auto-tag name changed from `"MCP"` to empty string (`""`).
+- Settings keys migrated from `mcp-*` namespace to `automation-bridge-*`.
+- Bridge UI/log wording now prefers "Automation Bridge" terminology.
+
+### Fixed
+
+- Added unit coverage for write/replace gates, replace behavior, empty replacement clearing, and updated settings
+  defaults.
+
 ## [0.7.0] - 2026-03-01
 
 ### Changed

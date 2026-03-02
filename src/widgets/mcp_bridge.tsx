@@ -15,15 +15,20 @@ import { RemAdapter } from '../api/rem-adapter';
 import { registerDevToolsBridgeExecutor } from './devtools-bridge-executor';
 import { useCompatibleTracker as useTracker } from './tracker-compat';
 import {
+  SETTING_ACCEPT_WRITE_OPERATIONS,
+  SETTING_ACCEPT_REPLACE_OPERATION,
   SETTING_AUTO_TAG_ENABLED,
   SETTING_AUTO_TAG,
   SETTING_JOURNAL_PREFIX,
   SETTING_JOURNAL_TIMESTAMP,
   SETTING_WS_URL,
   SETTING_DEFAULT_PARENT,
+  DEFAULT_ACCEPT_WRITE_OPERATIONS,
+  DEFAULT_ACCEPT_REPLACE_OPERATION,
+  DEFAULT_AUTO_TAG,
   DEFAULT_JOURNAL_PREFIX,
   DEFAULT_WS_URL,
-  MCPSettings,
+  AutomationBridgeSettings,
 } from '../settings';
 
 // Log entry type
@@ -49,7 +54,7 @@ interface HistoryEntry {
   remId?: string;
 }
 
-function MCPBridgeWidget() {
+function AutomationBridgeWidget() {
   // console.log(withLogPrefix('Widget rendering...'));
 
   const plugin = usePlugin();
@@ -66,6 +71,14 @@ function MCPBridgeWidget() {
   const remAdapterRef = useRef<RemAdapter | null>(null);
 
   // Read settings from RemNote
+  const acceptWriteOperations = useTracker(
+    () => plugin.settings.getSetting<boolean>(SETTING_ACCEPT_WRITE_OPERATIONS),
+    []
+  );
+  const acceptReplaceOperation = useTracker(
+    () => plugin.settings.getSetting<boolean>(SETTING_ACCEPT_REPLACE_OPERATION),
+    []
+  );
   const autoTagEnabled = useTracker(
     () => plugin.settings.getSetting<boolean>(SETTING_AUTO_TAG_ENABLED),
     []
@@ -109,9 +122,11 @@ function MCPBridgeWidget() {
   // Initialize RemAdapter with settings
   useEffect(() => {
     if (plugin) {
-      const settings: MCPSettings = {
+      const settings: AutomationBridgeSettings = {
+        acceptWriteOperations: acceptWriteOperations ?? DEFAULT_ACCEPT_WRITE_OPERATIONS,
+        acceptReplaceOperation: acceptReplaceOperation ?? DEFAULT_ACCEPT_REPLACE_OPERATION,
         autoTagEnabled: autoTagEnabled ?? true,
-        autoTag: autoTag ?? 'MCP',
+        autoTag: autoTag ?? DEFAULT_AUTO_TAG,
         journalPrefix: journalPrefix ?? DEFAULT_JOURNAL_PREFIX,
         journalTimestamp: journalTimestamp ?? true,
         wsUrl: wsUrl ?? DEFAULT_WS_URL,
@@ -128,6 +143,8 @@ function MCPBridgeWidget() {
   }, [
     plugin,
     addLog,
+    acceptWriteOperations,
+    acceptReplaceOperation,
     autoTagEnabled,
     autoTag,
     journalPrefix,
@@ -136,7 +153,7 @@ function MCPBridgeWidget() {
     defaultParentId,
   ]);
 
-  // Handle incoming requests from MCP server
+  // Handle incoming requests from automation bridge consumers.
   const handleRequest = useCallback(
     async (request: BridgeRequest): Promise<unknown> => {
       const adapter = remAdapterRef.current;
@@ -227,6 +244,7 @@ function MCPBridgeWidget() {
             remId: payload.remId as string,
             title: payload.title as string | undefined,
             appendContent: payload.appendContent as string | undefined,
+            replaceContent: payload.replaceContent as string | undefined,
             addTags: payload.addTags as string[] | undefined,
             removeTags: payload.removeTags as string[] | undefined,
           });
@@ -273,7 +291,7 @@ function MCPBridgeWidget() {
 
     // Connect on mount
     client.connect();
-    addLog(`Connecting to MCP server at ${currentWsUrl}...`, 'info');
+    addLog(`Connecting to automation bridge server at ${currentWsUrl}...`, 'info');
 
     // Cleanup on unmount
     return () => {
@@ -334,7 +352,7 @@ function MCPBridgeWidget() {
         }}
       >
         <h3 style={{ margin: 0, fontSize: '14px', fontWeight: 600 }}>
-          Automation Bridge (MCP, OpenClaw...)
+          Automation Bridge (OpenClaw, CLI, MCP...)
         </h3>
         <div
           style={{
@@ -546,4 +564,4 @@ function MCPBridgeWidget() {
   );
 }
 
-renderWidget(MCPBridgeWidget);
+renderWidget(AutomationBridgeWidget);

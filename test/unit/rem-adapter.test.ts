@@ -13,8 +13,10 @@ describe('RemAdapter', () => {
   beforeEach(() => {
     plugin = new MockRemNotePlugin();
     adapter = new RemAdapter(plugin as unknown as typeof plugin, {
+      acceptWriteOperations: true,
+      acceptReplaceOperation: false,
       autoTagEnabled: true,
-      autoTag: 'MCP',
+      autoTag: '',
       journalPrefix: '',
       journalTimestamp: true,
       wsUrl: 'ws://localhost:3002',
@@ -25,8 +27,10 @@ describe('RemAdapter', () => {
   describe('Settings management', () => {
     it('should initialize with default settings', () => {
       const settings = adapter.getSettings();
+      expect(settings.acceptWriteOperations).toBe(true);
+      expect(settings.acceptReplaceOperation).toBe(false);
       expect(settings.autoTagEnabled).toBe(true);
-      expect(settings.autoTag).toBe('MCP');
+      expect(settings.autoTag).toBe('');
       expect(settings.journalPrefix).toBe('');
     });
 
@@ -39,6 +43,16 @@ describe('RemAdapter', () => {
   });
 
   describe('createNote', () => {
+    it('should reject create when write operations are disabled', async () => {
+      adapter.updateSettings({ acceptWriteOperations: false });
+
+      await expect(
+        adapter.createNote({
+          title: 'Blocked note',
+        })
+      ).rejects.toThrow('Write operations are disabled in Automation Bridge settings');
+    });
+
     it('should create a basic note', async () => {
       const result = await adapter.createNote({
         title: 'Test Note',
@@ -137,6 +151,16 @@ describe('RemAdapter', () => {
   });
 
   describe('appendJournal', () => {
+    it('should reject journal append when write operations are disabled', async () => {
+      adapter.updateSettings({ acceptWriteOperations: false });
+
+      await expect(
+        adapter.appendJournal({
+          content: 'Blocked entry',
+        })
+      ).rejects.toThrow('Write operations are disabled in Automation Bridge settings');
+    });
+
     it('should append to daily document with timestamp', async () => {
       const result = await adapter.appendJournal({
         content: 'Journal entry',
@@ -946,6 +970,18 @@ describe('RemAdapter', () => {
   });
 
   describe('updateNote', () => {
+    it('should reject all updates when write operations are disabled', async () => {
+      plugin.addTestRem('blocked_update_test', 'Original title');
+      adapter.updateSettings({ acceptWriteOperations: false });
+
+      await expect(
+        adapter.updateNote({
+          remId: 'blocked_update_test',
+          title: 'New title',
+        })
+      ).rejects.toThrow('Write operations are disabled in Automation Bridge settings');
+    });
+
     it('should update note title', async () => {
       plugin.addTestRem('update_test', 'Original title');
 
@@ -971,6 +1007,62 @@ describe('RemAdapter', () => {
 
       const children = await testRem.getChildrenRem();
       expect(children).toHaveLength(2);
+    });
+
+    it('should replace direct children when replaceContent is provided', async () => {
+      const testRem = plugin.addTestRem('replace_test', 'Parent');
+      const oldChild = new MockRem('old_child', 'Old line');
+      await oldChild.setParent(testRem);
+      adapter.updateSettings({ acceptReplaceOperation: true });
+
+      await adapter.updateNote({
+        remId: 'replace_test',
+        replaceContent: 'New line 1\nNew line 2',
+      });
+
+      const children = await testRem.getChildrenRem();
+      expect(children).toHaveLength(2);
+      expect(children.map((c) => c.text?.[0])).toEqual(['New line 1', 'New line 2']);
+    });
+
+    it('should clear direct children when replaceContent is empty string', async () => {
+      const testRem = plugin.addTestRem('replace_clear_test', 'Parent');
+      const oldChild = new MockRem('old_child_clear', 'Old line');
+      await oldChild.setParent(testRem);
+      adapter.updateSettings({ acceptReplaceOperation: true });
+
+      await adapter.updateNote({
+        remId: 'replace_clear_test',
+        replaceContent: '',
+      });
+
+      const children = await testRem.getChildrenRem();
+      expect(children).toHaveLength(0);
+    });
+
+    it('should reject replace when replace operation is disabled', async () => {
+      plugin.addTestRem('replace_disabled_test', 'Parent');
+      adapter.updateSettings({ acceptReplaceOperation: false });
+
+      await expect(
+        adapter.updateNote({
+          remId: 'replace_disabled_test',
+          replaceContent: 'Should fail',
+        })
+      ).rejects.toThrow('Replace operation is disabled in Automation Bridge settings');
+    });
+
+    it('should reject requests that include both appendContent and replaceContent', async () => {
+      plugin.addTestRem('append_replace_test', 'Parent');
+      adapter.updateSettings({ acceptReplaceOperation: true });
+
+      await expect(
+        adapter.updateNote({
+          remId: 'append_replace_test',
+          appendContent: 'A',
+          replaceContent: 'B',
+        })
+      ).rejects.toThrow('appendContent and replaceContent cannot be used together');
     });
 
     it('should add tags', async () => {
@@ -1024,11 +1116,14 @@ describe('RemAdapter', () => {
 
   describe('getStatus', () => {
     it('should return status information', async () => {
+      adapter.updateSettings({ acceptWriteOperations: false, acceptReplaceOperation: true });
       const status = await adapter.getStatus();
 
       expect(status.connected).toBe(true);
       expect(status.pluginVersion).toBeDefined();
       expect(typeof status.pluginVersion).toBe('string');
+      expect(status.acceptWriteOperations).toBe(false);
+      expect(status.acceptReplaceOperation).toBe(true);
     });
   });
 

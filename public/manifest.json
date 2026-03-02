@@ -1,12 +1,12 @@
 {
   "manifestVersion": 1,
   "id": "remnote-mcp-bridge-p",
-  "name": "Automation Bridge (MCP, OpenClaw...)",
+  "name": "Automation Bridge (OpenClaw, CLI, MCP)",
   "author": "Robert Spiegel",
   "description": "Expose the RemNote API to MCP Server today and OpenClaw CLI tool. Create, search, read, and update notes via your local bridge setup. See README for details.",
   "version": {
     "major": 0,
-    "minor": 7,
+    "minor": 8,
     "patch": 0
   },
   "repoUrl": "https://github.com/robert7/remnote-mcp-bridge",

@@ -4,12 +4,16 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { ReactRNPlugin } from '@remnote/plugin-sdk';
 import {
+  SETTING_ACCEPT_WRITE_OPERATIONS,
+  SETTING_ACCEPT_REPLACE_OPERATION,
   SETTING_AUTO_TAG_ENABLED,
   SETTING_AUTO_TAG,
   SETTING_JOURNAL_PREFIX,
   SETTING_JOURNAL_TIMESTAMP,
   SETTING_WS_URL,
   SETTING_DEFAULT_PARENT,
+  DEFAULT_ACCEPT_WRITE_OPERATIONS,
+  DEFAULT_ACCEPT_REPLACE_OPERATION,
   DEFAULT_AUTO_TAG,
   DEFAULT_JOURNAL_PREFIX,
   DEFAULT_WS_URL,
@@ -51,9 +55,23 @@ describe('Widget Registration (index.tsx)', () => {
     it('should register all boolean settings', async () => {
       // Simulate onActivate
       await mockPlugin.settings!.registerBooleanSetting!({
+        id: SETTING_ACCEPT_WRITE_OPERATIONS,
+        title: 'Accept write operations',
+        description: 'Allow create, journal, and update operations from bridge consumers',
+        defaultValue: DEFAULT_ACCEPT_WRITE_OPERATIONS,
+      });
+
+      await mockPlugin.settings!.registerBooleanSetting!({
+        id: SETTING_ACCEPT_REPLACE_OPERATION,
+        title: 'Accept replace operation',
+        description: 'Allow update replace operations that overwrite direct child bullets',
+        defaultValue: DEFAULT_ACCEPT_REPLACE_OPERATION,
+      });
+
+      await mockPlugin.settings!.registerBooleanSetting!({
         id: SETTING_AUTO_TAG_ENABLED,
-        title: 'Auto-tag MCP notes',
-        description: 'Automatically add a tag to all notes created via MCP',
+        title: 'Auto-tag created notes',
+        description: 'Automatically add a tag to notes created via the automation bridge',
         defaultValue: true,
       });
 
@@ -64,7 +82,19 @@ describe('Widget Registration (index.tsx)', () => {
         defaultValue: true,
       });
 
-      expect(registerBooleanSettingSpy).toHaveBeenCalledTimes(2);
+      expect(registerBooleanSettingSpy).toHaveBeenCalledTimes(4);
+      expect(registerBooleanSettingSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: SETTING_ACCEPT_WRITE_OPERATIONS,
+          defaultValue: true,
+        })
+      );
+      expect(registerBooleanSettingSpy).toHaveBeenCalledWith(
+        expect.objectContaining({
+          id: SETTING_ACCEPT_REPLACE_OPERATION,
+          defaultValue: false,
+        })
+      );
       expect(registerBooleanSettingSpy).toHaveBeenCalledWith(
         expect.objectContaining({
           id: SETTING_AUTO_TAG_ENABLED,
@@ -83,21 +113,21 @@ describe('Widget Registration (index.tsx)', () => {
       await mockPlugin.settings!.registerStringSetting!({
         id: SETTING_AUTO_TAG,
         title: 'Auto-tag name',
-        description: 'Tag name to add to MCP-created notes (e.g., "MCP", "Claude")',
+        description: 'Tag name to add to bridge-created notes (leave empty to disable default tag)',
         defaultValue: DEFAULT_AUTO_TAG,
       });
 
       await mockPlugin.settings!.registerStringSetting!({
         id: SETTING_JOURNAL_PREFIX,
         title: 'Journal entry prefix',
-        description: 'Optional prefix for journal entries (e.g., "[MCP]")',
+        description: 'Optional prefix for journal entries',
         defaultValue: DEFAULT_JOURNAL_PREFIX,
       });
 
       await mockPlugin.settings!.registerStringSetting!({
         id: SETTING_WS_URL,
         title: 'WebSocket server URL',
-        description: 'URL of the MCP WebSocket server',
+        description: 'URL of the automation bridge WebSocket server',
         defaultValue: DEFAULT_WS_URL,
       });
 
@@ -119,7 +149,7 @@ describe('Widget Registration (index.tsx)', () => {
 
       expect(registerStringSettingSpy).toHaveBeenCalledWith(
         expect.objectContaining({
-          defaultValue: 'MCP',
+          defaultValue: '',
         })
       );
 
@@ -249,8 +279,8 @@ describe('Widget Registration (index.tsx)', () => {
 describe('Widget UI (mcp_bridge_popup.tsx)', () => {
   describe('Branding', () => {
     it('should use updated bridge title label', () => {
-      const panelTitle = 'Automation Bridge (MCP, OpenClaw...)';
-      expect(panelTitle).toBe('Automation Bridge (MCP, OpenClaw...)');
+      const panelTitle = 'Automation Bridge (OpenClaw, CLI, MCP...)';
+      expect(panelTitle).toBe('Automation Bridge (OpenClaw, CLI, MCP...)');
     });
   });
 

@@ -10,7 +10,13 @@ import {
   RemType,
   BuiltInPowerupCodes,
 } from '@remnote/plugin-sdk';
-import { MCPSettings, DEFAULT_JOURNAL_PREFIX } from '../settings';
+import {
+  AutomationBridgeSettings,
+  DEFAULT_ACCEPT_REPLACE_OPERATION,
+  DEFAULT_ACCEPT_WRITE_OPERATIONS,
+  DEFAULT_AUTO_TAG,
+  DEFAULT_JOURNAL_PREFIX,
+} from '../settings';
 
 // Build-time constant injected by webpack DefinePlugin
 declare const __PLUGIN_VERSION__: string;
@@ -60,6 +66,7 @@ export interface UpdateNoteParams {
   remId: string;
   title?: string;
   appendContent?: string;
+  replaceContent?: string;
   addTags?: string[];
   removeTags?: string[];
 }
@@ -175,16 +182,18 @@ const READ_INCLUDE_CONTENT_MODES: readonly IncludeContentMode[] = [
 ];
 
 export class RemAdapter {
-  private settings: MCPSettings;
+  private settings: AutomationBridgeSettings;
 
   constructor(
     private plugin: ReactRNPlugin,
-    settings?: Partial<MCPSettings>
+    settings?: Partial<AutomationBridgeSettings>
   ) {
     // Default settings
     this.settings = {
+      acceptWriteOperations: DEFAULT_ACCEPT_WRITE_OPERATIONS,
+      acceptReplaceOperation: DEFAULT_ACCEPT_REPLACE_OPERATION,
       autoTagEnabled: true,
-      autoTag: 'MCP',
+      autoTag: DEFAULT_AUTO_TAG,
       journalPrefix: DEFAULT_JOURNAL_PREFIX,
       journalTimestamp: true,
       wsUrl: 'ws://127.0.0.1:3002',
@@ -196,14 +205,14 @@ export class RemAdapter {
   /**
    * Update settings dynamically
    */
-  updateSettings(settings: Partial<MCPSettings>): void {
+  updateSettings(settings: Partial<AutomationBridgeSettings>): void {
     this.settings = { ...this.settings, ...settings };
   }
 
   /**
    * Get current settings
    */
-  getSettings(): MCPSettings {
+  getSettings(): AutomationBridgeSettings {
     return { ...this.settings };
   }
 
@@ -856,9 +865,39 @@ export class RemAdapter {
   }
 
   /**
+   * Append non-empty lines as direct child Rems.
+   */
+  private async appendChildLines(rem: PluginRem, content: string): Promise<void> {
+    const lines = content.split('\n');
+    for (const line of lines) {
+      if (line.trim()) {
+        const contentRem = await this.plugin.rem.createRem();
+        if (contentRem) {
+          await contentRem.setText(this.textToRichText(line));
+          await contentRem.setParent(rem);
+        }
+      }
+    }
+  }
+
+  /**
+   * Remove all direct child Rems under a parent Rem.
+   */
+  private async clearDirectChildren(rem: PluginRem): Promise<void> {
+    const children = await rem.getChildrenRem();
+    for (const child of children) {
+      await child.remove();
+    }
+  }
+
+  /**
    * Create a new note in RemNote
    */
   async createNote(params: CreateNoteParams): Promise<{ remId: string; title: string }> {
+    if (!this.settings.acceptWriteOperations) {
+      throw new Error('Write operations are disabled in Automation Bridge settings');
+    }
+
     const rem = await this.plugin.rem.createRem();
     if (!rem) {
       throw new Error('Failed to create Rem');
@@ -869,16 +908,7 @@ export class RemAdapter {
 
     // Add content as child if provided
     if (params.content) {
-      const lines = params.content.split('\n');
-      for (const line of lines) {
-        if (line.trim()) {
-          const contentRem = await this.plugin.rem.createRem();
-          if (contentRem) {
-            await contentRem.setText(this.textToRichText(line));
-            await contentRem.setParent(rem);
-          }
-        }
-      }
+      await this.appendChildLines(rem, params.content);
     }
 
     // Set parent: use provided parentId, or default parent from settings, or root
@@ -912,6 +942,10 @@ export class RemAdapter {
    * Append content to today's journal/daily document
    */
   async appendJournal(params: AppendJournalParams): Promise<{ remId: string; content: string }> {
+    if (!this.settings.acceptWriteOperations) {
+      throw new Error('Write operations are disabled in Automation Bridge settings');
+    }
+
     const today = new Date();
     const dailyDoc = await this.plugin.date.getDailyDoc(today);
 
@@ -1124,6 +1158,18 @@ export class RemAdapter {
    * Update an existing note
    */
   async updateNote(params: UpdateNoteParams): Promise<{ success: boolean; remId: string }> {
+    if (!this.settings.acceptWriteOperations) {
+      throw new Error('Write operations are disabled in Automation Bridge settings');
+    }
+
+    if (params.appendContent !== undefined && params.replaceContent !== undefined) {
+      throw new Error('appendContent and replaceContent cannot be used together');
+    }
+
+    if (params.replaceContent !== undefined && !this.settings.acceptReplaceOperation) {
+      throw new Error('Replace operation is disabled in Automation Bridge settings');
+    }
+
     const rem = await this.plugin.rem.findOne(params.remId);
 
     if (!rem) {
@@ -1135,18 +1181,15 @@ export class RemAdapter {
       await rem.setText(this.textToRichText(params.title));
     }
 
-    // Append content as new children
-    if (params.appendContent) {
-      const lines = params.appendContent.split('\n');
-      for (const line of lines) {
-        if (line.trim()) {
-          const contentRem = await this.plugin.rem.createRem();
-          if (contentRem) {
-            await contentRem.setText(this.textToRichText(line));
-            await contentRem.setParent(rem);
-          }
-        }
-      }
+    // Replace content by clearing all direct children first, then adding new child lines.
+    if (params.replaceContent !== undefined) {
+      await this.clearDirectChildren(rem);
+      await this.appendChildLines(rem, params.replaceContent);
+    }
+
+    // Append content as new direct children.
+    if (params.appendContent !== undefined) {
+      await this.appendChildLines(rem, params.appendContent);
     }
 
     // Add tags
@@ -1176,11 +1219,15 @@ export class RemAdapter {
     connected: boolean;
     pluginVersion: string;
     knowledgeBaseId?: string;
+    acceptWriteOperations: boolean;
+    acceptReplaceOperation: boolean;
   }> {
     return {
       connected: true,
       pluginVersion: __PLUGIN_VERSION__,
       knowledgeBaseId: undefined,
+      acceptWriteOperations: this.settings.acceptWriteOperations,
+      acceptReplaceOperation: this.settings.acceptReplaceOperation,
     };
   }
 }

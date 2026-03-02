@@ -1,6 +1,6 @@
 /**
  * WebSocket Client with automatic reconnection
- * Connects to the MCP server and handles message routing
+ * Connects to the automation bridge server and handles message routing
  */
 
 export type ConnectionStatus = 'disconnected' | 'connecting' | 'connected';
@@ -94,7 +94,7 @@ export class WebSocketClient {
       this.ws = new WebSocket(this.config.url);
 
       this.ws.onopen = () => {
-        this.log('Connected to MCP server');
+        this.log('Connected to automation bridge server');
         this.reconnectAttempts = 0;
         this.setStatus('connected');
         this.sendHello();
