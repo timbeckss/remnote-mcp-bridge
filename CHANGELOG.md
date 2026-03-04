@@ -7,6 +7,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-03-04
+
 ### Added
 
 - Added bridge write policy settings:
@@ -23,11 +25,6 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - Default auto-tag name changed from `"MCP"` to empty string (`""`).
 - Settings keys migrated from `mcp-*` namespace to `automation-bridge-*`.
 - Bridge UI/log wording now prefers "Automation Bridge" terminology.
-
-### Fixed
-
-- Added unit coverage for write/replace gates, replace behavior, empty replacement clearing, and updated settings
-  defaults.
 
 ## [0.7.0] - 2026-03-01
 
