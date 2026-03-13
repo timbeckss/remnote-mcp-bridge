@@ -866,6 +866,19 @@ export class RemAdapter {
   }
 
   /**
+   * Normalize content before passing to create note.
+   * Removes all blank lines.
+   * This prevents the SDK from creating empty Rem nodes for blank lines,
+   * which commonly appear in LLM-generated or user-pasted plain text.
+   */
+  private normalizeContent(content: string): string {
+    return content
+      .split('\n')
+      .filter((line) => line.trim() !== '')
+      .join('\n');
+  }
+
+  /**
    * Append non-empty lines as direct child Rems.
    */
   private async appendChildLines(rem: PluginRem, content: string): Promise<void> {
@@ -930,28 +943,32 @@ export class RemAdapter {
         await this.addTagToRem(titleRem, tagName);
       }
 
-      let remIds: string[] | undefined;
-      let titles: string[] | undefined;
+      let childRemIds: string[] | undefined;
+      let childTitles: string[] | undefined;
       if (params.content) {
-        // Import content as markdown tree under the title Rem
+        // Normalize content to collapse consecutive blank lines
+        const normalizedContent = this.normalizeContent(params.content);
         // Use native SDK method to create the tree
-        const createdRems = await this.plugin.rem.createTreeWithMarkdown(params.content, titleRem._id);
-        const childRemIds = createdRems?.map((r) => r._id) || [];
-        remIds = [titleRem._id, ...childRemIds];
+        const createdRems = await this.plugin.rem.createTreeWithMarkdown(normalizedContent, titleRem._id);
+        childRemIds = createdRems?.map((r) => r._id) || [];
 
         // Extract titles for all created Rems
-        const childTitles = await Promise.all(
+        childTitles = await Promise.all(
           (createdRems || []).map((r) => this.extractText(r.text))
         );
-        titles = [params.title, ...childTitles];
       }
+
+      const remIds = [titleRem._id, ...(childRemIds || [])];
+      const titles = [params.title, ...(childTitles || [])];
 
       return { remIds, titles };
 
     } else if (params.content) {
       // Scenario 2: content only
+      // Normalize content to collapse consecutive blank lines
+      const normalizedContent = this.normalizeContent(params.content);
       // Use native SDK method to create the tree
-      const createdRems = await this.plugin.rem.createTreeWithMarkdown(params.content, parentId);
+      const createdRems = await this.plugin.rem.createTreeWithMarkdown(normalizedContent, parentId);
       const remIds = createdRems?.map((r) => r._id) || [];
 
       if (remIds.length === 0) {
