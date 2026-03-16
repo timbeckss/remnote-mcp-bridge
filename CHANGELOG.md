@@ -13,6 +13,7 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   - Supports simple note creation (`title` only), hierarchical markdown import under a parent (`title` + `content`), and direct markdown import (`content` only).
   - Flashcards could be created using RemNote markdown syntax (e.g., `::`, `;;`, `>>`) within the `content`.
 - Added support for hierarchical markdown trees in `update_note` (`appendContent`, `replaceContent`) and `append_journal` (`content`).
+- Fixed an issue where structural markdown elements (headers, ordered lists) on the first line of content were not being parsed correctly by the RemNote SDK. Implemented a "Dummy Root Strategy" using a plain text root to ensure robust hierarchical parsing for all markdown structures.
 
 ### Changed
 - Standardized mutating actions (`createNote`, `updateNote`, `appendJournal`) to return plural response format `{ remIds, titles }`.
