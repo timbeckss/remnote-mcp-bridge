@@ -30,6 +30,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 - Updated `README.md` and setup guides to reflect the new automatic background startup and standby reconnect behavior.
 - Documented that the sidebar panel is optional for connection setup and remains available for status and manual
   `Reconnect`.
+- Updated `README.md` capability and tool summaries to reflect unified note/markdown-tree/flashcard creation and
+  `search_by_tag` support.
 
 ## [0.9.0] - 2026-03-17
 

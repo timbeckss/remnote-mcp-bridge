@@ -40,11 +40,11 @@ to interact with external tools and data sources. With this plugin, your AI assi
 
 ### Core Capabilities
 
-- **Create Notes** - AI can create new notes with titles, content, and tags
-- **Search Knowledge Base** - Full-text search across all your Rems
-- **Read Notes** - Access note content and hierarchical children
-- **Update Notes** - Modify existing notes, append content, manage tags
-- **Daily Journal** - Append entries to today's daily document
+- **Create Notes & Flashcards** - Create simple notes, hierarchical markdown trees, or RemNote-native flashcards
+- **Search Knowledge Base** - Full-text search across your Rems, plus tag-based search with ancestor context
+- **Read Notes** - Read notes with markdown or structured child content for follow-up navigation
+- **Update Notes** - Rename notes, append or replace hierarchical content, and manage tags
+- **Daily Journal** - Append entries to today's daily document, including hierarchical markdown content
 
 ### Plugin Features
 
@@ -164,11 +164,12 @@ Once connected, your AI assistant can use these tools:
 
 | Tool | Description |
 |------|-------------|
-| `remnote_create_note` | Create a new note with title, content, parent, and tags |
+| `remnote_create_note` | Create notes, markdown trees, or flashcards with title, content, parent, and tags |
 | `remnote_search` | Search the knowledge base with query and filters |
-| `remnote_read_note` | Read a note's content and children by ID |
-| `remnote_update_note` | Update title, append content, add/remove tags |
-| `remnote_append_journal` | Add an entry to today's daily document |
+| `remnote_search_by_tag` | Search by tag with ancestor context and content controls |
+| `remnote_read_note` | Read a note's content in markdown or structured form by ID |
+| `remnote_update_note` | Update title, append or replace content, add/remove tags |
+| `remnote_append_journal` | Add hierarchical markdown content to today's daily document |
 | `remnote_status` | Check connection status |
 
 ## Usage
