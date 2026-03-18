@@ -46,13 +46,23 @@ export type BridgeUiCommand =
       source: 'widget';
       id: string;
       timestamp: number;
+      kind: 'nudge_reconnect';
+      reason?: string;
+    }
+  | {
+      source: 'widget';
+      id: string;
+      timestamp: number;
       kind: 'update_settings';
       settings?: Partial<AutomationBridgeSettings>;
     };
 
 export interface BridgeUiBridgeConfig {
   plugin: Pick<ReactRNPlugin, 'event' | 'storage'>;
-  runtime: Pick<BridgeRuntime, 'getSnapshot' | 'subscribe' | 'reconnect' | 'updateSettings'>;
+  runtime: Pick<
+    BridgeRuntime,
+    'getSnapshot' | 'subscribe' | 'reconnect' | 'nudgeReconnect' | 'updateSettings'
+  >;
 }
 
 function serializeStats(stats: SessionStats): SessionStats {
@@ -171,6 +181,11 @@ export function registerBridgeRuntimeUiBridge(config: BridgeUiBridgeConfig): () 
 
     if (command.kind === 'reconnect') {
       config.runtime.reconnect(command.reason ?? 'widget command');
+      return;
+    }
+
+    if (command.kind === 'nudge_reconnect') {
+      config.runtime.nudgeReconnect(command.reason ?? 'widget activity');
       return;
     }
 

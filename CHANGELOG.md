@@ -11,8 +11,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Added a plugin-level bridge runtime that starts on plugin activation, so the bridge can connect even when the
   sidebar panel is never opened.
-- Added indefinite standby reconnect behavior after the initial retry burst, plus reconnect nudges on app focus,
-  tab visibility regain, and browser `online` events.
+- Added indefinite standby reconnect behavior after the initial retry burst, plus reconnect nudges on RemNote
+  activity, bridge-panel opening, tab visibility regain, and browser `online` events.
 
 ### Changed
 
@@ -28,6 +28,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 - Fixed sidebar state sync after late panel opening by bridging snapshot updates and control commands across the
   plugin activation context and the widget UI context through session-storage-based IPC.
+- Fixed standby wake-up retries so meaningful RemNote activity and opening the bridge panel can trigger earlier retry
+  nudges with cooldown protection instead of waiting for the next long standby timer.
 
 ### Documentation
 
@@ -38,6 +40,8 @@ Versioning](https://semver.org/spec/v2.0.0.html).
   trigger faster reconnects.
 - Documented why the bridge connects outward from RemNote, including a link to RemNote's official backend-plugin
   limitation docs.
+- Clarified that panel-open and in-app RemNote activity are the main faster-retry triggers, rather than relying only
+  on raw window focus.
 - Reframed `README.md` around two first-class companion paths, giving `remnote-mcp-server` and `remnote-cli` equal
   weight in the overview, privacy, installation, and architecture sections.
 

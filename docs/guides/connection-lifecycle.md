@@ -91,7 +91,8 @@ Even in standby mode, the bridge can retry sooner than the scheduled timer.
 Immediate reconnect can be triggered by:
 
 - clicking **Reconnect Now** in the sidebar
-- RemNote window focus
+- opening the Automation Bridge panel
+- moving focus inside RemNote (for example, changing pane focus, focused note, or focused portal)
 - browser/tab visibility returning
 - browser `online` event
 
@@ -99,14 +100,14 @@ This means a common workflow works well:
 
 1. Leave RemNote open.
 2. Start the CLI daemon or MCP server later.
-3. Focus RemNote.
+3. Open the Automation Bridge panel or move focus to another note/pane in RemNote.
 4. The bridge should attempt to reconnect immediately instead of waiting for the full standby timer.
 
-Important detail: if RemNote is already focused and stays focused the whole time, starting the companion process does
-not magically wake the bridge at once. In that case it reconnects on:
+Important detail: normal in-app activity is a more reliable wake-up trigger than raw browser-window focus in RemNote.
+If none of those wake-up signals happen, the bridge reconnects on:
 
 - the next scheduled retry
-- a later focus / visibility / online event
+- a later RemNote activity / visibility / online event
 - or manual **Reconnect Now**
 
 ## Sidebar Status Meanings
@@ -123,7 +124,7 @@ This can happen on:
 
 - initial startup
 - a scheduled retry firing
-- a focus/visibility/online wake-up
+- a panel-open, RemNote-activity, visibility, or online wake-up
 - manual **Reconnect Now**
 
 ### Retrying
@@ -144,7 +145,7 @@ The panel shows:
 
 - next background retry countdown
 - last disconnect reason, when available
-- a hint that focus/visibility/online can trigger an earlier reconnect
+- a hint that opening the panel, moving focus in RemNote, or browser visibility/online can trigger an earlier reconnect
 
 ## Practical Scenarios
 
@@ -154,7 +155,8 @@ This is supported.
 
 The bridge keeps retrying in the background. If you want to speed it up, either:
 
-- focus RemNote
+- open the Automation Bridge panel
+- switch notes or panes inside RemNote
 - or click **Reconnect Now**
 
 ### RemNote Open on a Browser Machine for a Long Time

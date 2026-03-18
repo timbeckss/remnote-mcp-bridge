@@ -1,6 +1,6 @@
 declare const __PLUGIN_VERSION__: string;
 
-import { type ReactRNPlugin } from '@remnote/plugin-sdk';
+import { FocusEvents, SidebarEvents, type ReactRNPlugin, WindowEvents } from '@remnote/plugin-sdk';
 import { RemAdapter } from '../api/rem-adapter';
 import {
   type BridgeRequest,
@@ -56,12 +56,14 @@ export interface BridgeRuntime {
   getSnapshot(): BridgeRuntimeSnapshot;
   subscribe(listener: (snapshot: BridgeRuntimeSnapshot) => void): () => void;
   reconnect(reason?: string): void;
+  nudgeReconnect(reason?: string): void;
   updateSettings(settings: Partial<AutomationBridgeSettings>): void;
   shutdown(): void;
 }
 
 const MAX_LOGS = 50;
 const MAX_HISTORY = 10;
+const AUTO_NUDGE_COOLDOWN_MS = 15_000;
 
 class BridgeRuntimeController implements BridgeRuntime {
   private readonly adapter: RemAdapter;
@@ -82,6 +84,8 @@ class BridgeRuntimeController implements BridgeRuntime {
   };
   private history: HistoryEntry[] = [];
   private lastConnectedAt?: number;
+  private lastAutoNudgeAt?: number;
+  private lastSuppressedAutoNudgeAt?: number;
 
   constructor(
     private readonly plugin: ReactRNPlugin,
@@ -135,6 +139,36 @@ class BridgeRuntimeController implements BridgeRuntime {
     console.log(withScopedLogPrefix('runtime', `Reconnect requested: ${reason}`));
     this.addLog(`Manual reconnection requested (${reason})`, 'info');
     this.wsClient.reconnect();
+  }
+
+  nudgeReconnect(reason = 'activity'): void {
+    if (this.status === 'connected' || this.status === 'connecting') {
+      return;
+    }
+
+    const now = Date.now();
+    if (this.lastAutoNudgeAt !== undefined && now - this.lastAutoNudgeAt < AUTO_NUDGE_COOLDOWN_MS) {
+      if (
+        this.lastSuppressedAutoNudgeAt === undefined ||
+        now - this.lastSuppressedAutoNudgeAt >= AUTO_NUDGE_COOLDOWN_MS
+      ) {
+        console.log(
+          withScopedLogPrefix(
+            'runtime',
+            `Auto reconnect nudge suppressed during cooldown: ${reason}`
+          )
+        );
+        this.addLog(`Auto reconnect nudge suppressed during cooldown (${reason})`, 'info');
+        this.lastSuppressedAutoNudgeAt = now;
+      }
+      return;
+    }
+
+    this.lastAutoNudgeAt = now;
+    this.lastSuppressedAutoNudgeAt = undefined;
+    console.log(withScopedLogPrefix('runtime', `Auto reconnect nudged: ${reason}`));
+    this.addLog(`Auto reconnect nudged (${reason})`, 'info');
+    this.wsClient.nudgeReconnect(reason);
   }
 
   updateSettings(nextSettings: Partial<AutomationBridgeSettings>): void {
@@ -333,18 +367,33 @@ class BridgeRuntimeController implements BridgeRuntime {
   }
 
   private registerLifecycleNudges(): void {
+    const addPluginListener = (eventId: string, reason: string, listenerKey?: string): void => {
+      const callback = () => {
+        this.nudgeReconnect(reason);
+      };
+      this.plugin.event.addListener(eventId, listenerKey, callback);
+      this.windowListeners.push(() =>
+        this.plugin.event.removeListener(eventId, listenerKey, callback)
+      );
+    };
+
+    addPluginListener(WindowEvents.FocusedPaneChange, 'focused pane changed');
+    addPluginListener(FocusEvents.FocusedRemChange, 'focused rem changed');
+    addPluginListener(FocusEvents.FocusedPortalChange, 'focused portal changed');
+    addPluginListener(SidebarEvents.ClickSidebarItem, 'sidebar item clicked');
+
     if (typeof window === 'undefined') {
       return;
     }
 
     const focusListener = () => {
-      this.wsClient.nudgeReconnect('window focus');
+      this.nudgeReconnect('window focus');
     };
     window.addEventListener('focus', focusListener);
     this.windowListeners.push(() => window.removeEventListener('focus', focusListener));
 
     const onlineListener = () => {
-      this.wsClient.nudgeReconnect('browser online');
+      this.nudgeReconnect('browser online');
     };
     window.addEventListener('online', onlineListener);
     this.windowListeners.push(() => window.removeEventListener('online', onlineListener));
@@ -352,7 +401,7 @@ class BridgeRuntimeController implements BridgeRuntime {
     if (typeof document !== 'undefined') {
       const visibilityListener = () => {
         if (!document.hidden) {
-          this.wsClient.nudgeReconnect('tab visible');
+          this.nudgeReconnect('tab visible');
         }
       };
       document.addEventListener('visibilitychange', visibilityListener);

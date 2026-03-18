@@ -140,6 +140,12 @@ function AutomationBridgeWidget() {
     console.log(withScopedLogPrefix('widget', 'Storage command out: request_snapshot'));
     void plugin.storage.setSession(BRIDGE_UI_COMMAND_STORAGE_KEY, command);
 
+    const nudgeCommand = createBridgeUiCommand('nudge_reconnect', {
+      reason: 'bridge panel opened',
+    });
+    console.log(withScopedLogPrefix('widget', 'Storage command out: nudge_reconnect'));
+    void plugin.storage.setSession(BRIDGE_UI_COMMAND_STORAGE_KEY, nudgeCommand);
+
     return () => {
       plugin.event.removeListener(
         StorageEvents.StorageSessionChange,

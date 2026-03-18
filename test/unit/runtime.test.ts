@@ -1,3 +1,4 @@
+import { FocusEvents, SidebarEvents, WindowEvents } from '@remnote/plugin-sdk';
 import { beforeEach, afterEach, describe, expect, it, vi } from 'vitest';
 import {
   initializeBridgeRuntime,
@@ -169,6 +170,69 @@ describe('Bridge runtime', () => {
     expect(
       snapshot.logs.some((entry) =>
         entry.message.includes('Manual reconnection requested (sidebar button)')
+      )
+    ).toBe(true);
+  });
+
+  it('handles automatic nudge commands from the UI bridge', async () => {
+    vi.useFakeTimers();
+    plugin.setTestSetting(SETTING_WS_URL, 'ws://127.0.0.1:3002');
+    runtime = await initializeBridgeRuntime(plugin as unknown as never);
+    await vi.runOnlyPendingTimersAsync();
+
+    MockWebSocket.mode = 'close';
+    MockWebSocket.instances.at(-1)?.close(1006, 'Connection lost');
+    await vi.advanceTimersByTimeAsync(0);
+
+    const instancesBeforeNudge = MockWebSocket.instances.length;
+
+    await plugin.storage.setSession(BRIDGE_UI_COMMAND_STORAGE_KEY, {
+      source: 'widget',
+      id: 'cmd-nudge',
+      timestamp: Date.now(),
+      kind: 'nudge_reconnect',
+      reason: 'bridge panel opened',
+    });
+    await vi.advanceTimersByTimeAsync(0);
+
+    expect(MockWebSocket.instances.length).toBeGreaterThan(instancesBeforeNudge);
+    expect(
+      runtime
+        .getSnapshot()
+        .logs.some((entry) => entry.message.includes('Auto reconnect nudged (bridge panel opened)'))
+    ).toBe(true);
+  });
+
+  it('nudges reconnect on RemNote activity with a cooldown while disconnected', async () => {
+    vi.useFakeTimers();
+    plugin.setTestSetting(SETTING_WS_URL, 'ws://127.0.0.1:3002');
+    runtime = await initializeBridgeRuntime(plugin as unknown as never);
+    await vi.runOnlyPendingTimersAsync();
+
+    MockWebSocket.mode = 'close';
+    MockWebSocket.instances.at(-1)?.close(1006, 'Connection lost');
+    await vi.advanceTimersByTimeAsync(0);
+
+    const instancesBeforeFirstNudge = MockWebSocket.instances.length;
+    plugin.emitEvent(WindowEvents.FocusedPaneChange, {});
+    await vi.advanceTimersByTimeAsync(0);
+    expect(MockWebSocket.instances.length).toBeGreaterThan(instancesBeforeFirstNudge);
+
+    const instancesAfterFirstNudge = MockWebSocket.instances.length;
+    plugin.emitEvent(FocusEvents.FocusedRemChange, {});
+    plugin.emitEvent(SidebarEvents.ClickSidebarItem, {});
+    await vi.advanceTimersByTimeAsync(0);
+    expect(MockWebSocket.instances.length).toBe(instancesAfterFirstNudge);
+
+    await vi.advanceTimersByTimeAsync(15_000);
+    plugin.emitEvent(SidebarEvents.ClickSidebarItem, {});
+    await vi.advanceTimersByTimeAsync(0);
+    expect(MockWebSocket.instances.length).toBeGreaterThan(instancesAfterFirstNudge);
+
+    const snapshot = runtime.getSnapshot();
+    expect(
+      snapshot.logs.some((entry) =>
+        entry.message.includes('Auto reconnect nudge suppressed during cooldown')
       )
     ).toBe(true);
   });

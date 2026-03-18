@@ -88,7 +88,7 @@ export function buildConnectionUiState(
             : 'Connection attempt',
       hint:
         snapshot.retryPhase === 'standby'
-          ? 'This was likely triggered by focus, visibility regain, browser online, or Reconnect Now.'
+          ? 'This was likely triggered by opening the bridge panel, moving focus inside RemNote, browser visibility regain, browser online, or Reconnect Now.'
           : undefined,
       lastDisconnectLabel,
     };
@@ -123,7 +123,7 @@ export function buildConnectionUiState(
       directionLabel: 'Bridge -> Companion app',
       phaseLabel: 'Standby reconnect',
       nextRetryLabel,
-      hint: 'It will also retry sooner if RemNote regains focus, becomes visible, or comes back online.',
+      hint: 'It will also retry sooner when you open this panel, move focus inside RemNote, or the browser becomes visible or comes back online.',
       lastDisconnectLabel,
       lastConnectedLabel,
     };

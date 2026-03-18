@@ -162,7 +162,8 @@ If RemNote was already open before the companion process started, the bridge kee
 click **Reconnect Now** for an immediate retry. The sidebar also shows whether the bridge is still in the quick retry
 window or already in standby background retry mode.
 
-For exact retry/backoff behavior and wake-up triggers such as focus/visibility, see the [Connection Lifecycle
+For exact retry/backoff behavior and wake-up triggers such as opening the bridge panel, RemNote activity, or
+visibility/online events, see the [Connection Lifecycle
 Guide](docs/guides/connection-lifecycle.md).
 
 ## Important Limitations

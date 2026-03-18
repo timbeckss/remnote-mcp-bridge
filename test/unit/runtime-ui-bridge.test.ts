@@ -47,6 +47,7 @@ describe('registerBridgeRuntimeUiBridge', () => {
           return () => {};
         },
         reconnect: vi.fn(),
+        nudgeReconnect: vi.fn(),
         updateSettings: vi.fn(),
       },
     });
@@ -70,6 +71,7 @@ describe('registerBridgeRuntimeUiBridge', () => {
   it('routes widget commands from storage to the runtime', async () => {
     const plugin = new MockRemNotePlugin();
     const reconnect = vi.fn();
+    const nudgeReconnect = vi.fn();
     const updateSettings = vi.fn();
 
     const unregister = registerBridgeRuntimeUiBridge({
@@ -87,6 +89,7 @@ describe('registerBridgeRuntimeUiBridge', () => {
         }),
         subscribe: () => () => {},
         reconnect,
+        nudgeReconnect,
         updateSettings,
       },
     });
@@ -102,6 +105,13 @@ describe('registerBridgeRuntimeUiBridge', () => {
       source: 'widget',
       id: 'cmd-2',
       timestamp: Date.now(),
+      kind: 'nudge_reconnect',
+      reason: 'bridge panel opened',
+    });
+    await plugin.storage.setSession(BRIDGE_UI_COMMAND_STORAGE_KEY, {
+      source: 'widget',
+      id: 'cmd-3',
+      timestamp: Date.now(),
       kind: 'update_settings',
       settings: { wsUrl: 'ws://127.0.0.1:4444' },
     });
@@ -109,6 +119,7 @@ describe('registerBridgeRuntimeUiBridge', () => {
     unregister();
 
     expect(reconnect).toHaveBeenCalledWith('test click');
+    expect(nudgeReconnect).toHaveBeenCalledWith('bridge panel opened');
     expect(updateSettings).toHaveBeenCalledWith({ wsUrl: 'ws://127.0.0.1:4444' });
   });
 });
