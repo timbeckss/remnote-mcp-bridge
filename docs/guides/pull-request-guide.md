@@ -10,7 +10,7 @@ This repository is part of a three-repo bridge surface:
 
 When a feature or protocol change affects more than one repo, the pull requests must stay in sync.
 
-Use the [repository pull request template](../../.github/PULL_REQUEST_TEMPLATE.md) for the submission checklist.
+Use the [repository pull request template](../../.github/pull_request_template.md) for the submission checklist.
 This guide explains the cross-repo policy behind that checklist.
 that checklist.
 
