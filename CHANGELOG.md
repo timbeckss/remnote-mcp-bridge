@@ -7,18 +7,13 @@ Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [0.10.2] - 2026-03-25
+
 ### Added
 - Added interactive history entries: expandable child items view, hover actions panel with copy-reference button, and click-to-open behavior on titles (thanks to @Twb06).
 
 ### Changed
-
-- Moved GitHub Actions CI to the shared reusable workflow in `robert7/workflows`, keeping local `main` push and pull
-  request triggers while centralizing the job definition.
-- Upgraded the lint toolchain to ESLint 9.x and `typescript-eslint` 8.x while keeping the existing `.eslintrc` flow
-  enabled for current scripts.
-- Migrated the repo to `eslint.config.mjs` flat config and aligned runtime and local tooling on Node 20.19.0 via
-  package metadata, `.nvmrc`, and `node-check.sh`.
-- Pinned the shared GitHub Actions CI workflow to `robert7/workflows/.github/workflows/node-ci.yml@v0.2.0`.
+- Raised the local tooling baseline to Node 20.19.0 for consistent package metadata and developer environment checks.
 
 ## [0.10.0] - 2026-03-18
 
